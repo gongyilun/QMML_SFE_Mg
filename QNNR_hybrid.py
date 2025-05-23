@@ -153,7 +153,7 @@ def prepare_dataset_k_fold(X, y, train_indices, test_indices):
 
 if __name__ == "__main__":
     date = '05_19_25_1'
-    file_name = f'QNN/result/{date}.csv'
+    file_name = f'QNNR/result/{date}.csv'
 
     print("\n--- Loading and Preprocessing Data ---")
 

@@ -40,7 +40,7 @@ NUM_EPOCHS = 100 # Adjust as needed
 
 # K-fold cross-validation parameters
 N_REPEATS = 10
-TEST_SIZE = 1
+TEST_SIZE = 1      # Leave-one-out cross-validation (LOOCV) is suggested since the sample size is too small
 
 def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
     ### Feature Map, Ansatz, then QNN Constructor
@@ -157,7 +157,8 @@ if __name__ == "__main__":
 
     print("\n--- Loading and Preprocessing Data ---")
 
-    df = pd.read_csv("qml_training-validation-data.csv")
+    dataset_name = "qml_training-validation-data.csv"
+    df = pd.read_csv(dataset_name)
     X = df[['Element', 'el_neg', 'B/GPa', 'Volume/A^3']].values
     y = df['SFE/mJm^-3'].values
 
@@ -173,25 +174,14 @@ if __name__ == "__main__":
                                'R2 test', 'R2 train'])
     i = 0
 
+    # LOSS = nn.MSELoss()
+    LOSS = nn.HuberLoss()  # maybe less prone to extreme values
+    # LOSS = nn.SmoothL1Loss()
+    # LOSS = WeightedLoss(small_threshold=5, large_threshold=30, weight_small=16.0, weight_large=4.0)
+
     print("\n--- Start K-Fold Loop ---")
 
     for train_indices, test_indices in rkf.split(X):
-        ## Feature Scaling (important for many QML algorithms)
-        ## The output of PauliFeatureMap is sensitive to input scale.
-        ## Typically, inputs are scaled to [0, pi] or [-1, 1] or similar.
-        ## If your feature map expects angles (like many rotations), scaling to [0, pi] is common.
-        ## PauliFeatureMap often works well with inputs in [-1, 1] or [0, 1].
-
-        # scaler_X = MinMaxScaler(feature_range=(-1, 1)) # Or (0, np.pi) if your feature map implies angles
-        # X = scaler_X.fit_transform(X)
-        # y_scaler = MinMaxScaler(feature_range=(-1, 1))
-        # y = y_scaler.fit_transform(y.reshape(-1,1))
-
-        ## Target variable scaling (if it's a regression task and target has wide range)
-        ## For QNN output in [-1,1], you might want to scale y_data to this range or use a final classical layer to adapt.
-        ## For simplicity, let's assume y_data is already in a suitable range or we handle it with loss/activation.
-        ## If y_data is e.g. 0 or 1 for classification, adjust loss function accordingly.
-
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         X_train, y_train, X_test, y_test, element_test, element_train = prepare_dataset_k_fold(X, y, train_indices, test_indices)
 
@@ -209,16 +199,6 @@ if __name__ == "__main__":
         print(f"Training data shape: X_train_t: {X_train_t.shape}, y_train_t: {y_train_t.shape}")
         print(f"Testing data shape: X_test_t: {X_test_t.shape}, y_test_t: {y_test_t.shape}")
 
-        # --- 7. Loss Function and Optimizer ---
-        # For regression with QNN output in [-1, 1], MSELoss is common.
-        # The QNN output (expectation value) is typically in [-1, 1].
-        # If your target y_data is not in this range, you might need to:
-        #   1. Scale y_data to [-1, 1].
-        #   2. Add a classical layer after the QNN to map the output to the desired range.
-        #   3. Use a different observable strategy if direct mapping is hard.
-
-        # criterion = nn.MSELoss()
-        criterion = nn.HuberLoss()  # maybe less prone to extreme values
 
         # For binary classification (0 or 1 target):
         # You might scale the QNN output (e.g., (output + 1) / 2 to get [0,1]) and then use nn.BCELoss()
@@ -245,7 +225,7 @@ if __name__ == "__main__":
                         for batch_X, batch_y in train_loader:
                             optimizer.zero_grad()  # Clear gradients
                             outputs = model(batch_X)  # Forward pass
-                            loss = criterion(outputs, batch_y)  # Calculate loss
+                            loss = LOSS(outputs, batch_y)  # Calculate loss
                             loss.backward()  # Backward pass (compute gradients)
                             optimizer.step()  # Update weights
                             running_loss += loss.item() * batch_X.size(0)
@@ -259,7 +239,7 @@ if __name__ == "__main__":
                         with torch.no_grad():  # Disable gradient calculations
                             for batch_X_test, batch_y_test in test_loader:
                                 outputs_test = model(batch_X_test)
-                                loss_test = criterion(outputs_test, batch_y_test)
+                                loss_test = LOSS(outputs_test, batch_y_test)
                                 test_loss += loss_test.item() * batch_X_test.size(0)
 
                         epoch_test_loss = test_loss / len(test_loader.dataset)
@@ -350,6 +330,8 @@ if __name__ == "__main__":
                                }
                     df.loc[len(df)] = new_row
                     df.to_csv(file_name, index=False)  # update csv every loop
+                    df.at[0, "info"] = [f"DATASET: {dataset_name}, LEARNING_RATE = {LEARNING_RATE}, "
+                                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS}"]
 
                     # To make predictions on new data:
                     # new_data_np = np.array([[val1, val2, val3], ...]) # Your new data

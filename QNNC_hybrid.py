@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split, RepeatedKFold
+from sklearn.model_selection import RepeatedKFold
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, r2_score
 
@@ -18,7 +18,7 @@ from qiskit.primitives import Sampler
 from qiskit_machine_learning.neural_networks import SamplerQNN
 from qiskit_machine_learning.connectors import TorchConnector
 from qiskit_machine_learning.circuit.library import QNNCircuit
-from qiskit_machine_learning.utils.loss_functions import L2Loss # Qiskit ML loss, or use PyTorch's
+from qiskit_machine_learning.utils.loss_functions import L2Loss  # Qiskit ML loss, or use PyTorch's
 from qiskit.quantum_info import SparsePauliOp
 
 ### Globals
@@ -39,14 +39,15 @@ ENTANGLEMENT_LIST = ['linear', 'full', 'circular']
 # Training hyperparameters
 LEARNING_RATE = 0.01
 BATCH_SIZE = 30
-NUM_EPOCHS = 100 # Adjust as needed
+NUM_EPOCHS = 100  # Adjust as needed
 
 # K-fold cross-validation parameters
 N_REPEATS = 10
-TEST_SIZE = 1      # Leave-one-out cross-validation (LOOCV) is suggested since the sample size is too small
+TEST_SIZE = 1  # Leave-one-out cross-validation (LOOCV) is suggested since the sample size is too small
 
 # Data conf
 CLASSIFIER_THRESHOLD = 17
+
 
 def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
     ### Feature Map, Ansatz, then QNN Constructor
@@ -55,7 +56,7 @@ def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
     input_params = ParameterVector("x", NUM_FEATURES)
 
     feature_map_template = PauliFeatureMap(
-        feature_dimension=NUM_FEATURES, # This tells the template how many input parameters it structurally needs
+        feature_dimension=NUM_FEATURES,  # This tells the template how many input parameters it structurally needs
         reps=feature_map_reps,
         entanglement=entangle
     )
@@ -68,7 +69,7 @@ def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
     # Create a template to find out how many parameters it needs structurally
     ansatz_template = RealAmplitudes(NUM_QUBITS, reps=ansatz_reps, entanglement=entangle)
     # ParameterVector for trainable weights - sized based on the template's structural parameters
-    num_ansatz_params = ansatz_template.num_parameters # This was correctly calculated as 12
+    num_ansatz_params = ansatz_template.num_parameters  # This was correctly calculated as 12
     weight_params = ParameterVector("θ", num_ansatz_params)
 
     # Create the ansatz circuit instance by assigning the weight parameters to the template
@@ -93,7 +94,7 @@ def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
         output_shape=output_shape,
         sampler=sampler,
         sparse=False,
-        input_gradients=False,         # Set to True if you need gradients w.r.t. inputs
+        input_gradients=False,  # Set to True if you need gradients w.r.t. inputs
     )
 
     # --- 4. TorchConnector ---
@@ -112,7 +113,7 @@ class HybridModel(nn.Module):
         self.qnn = qnn_model
         # Example: Add classical layers after the QNN
         # self.classical_post = nn.Linear(qnn_model.output_shape[0], NUM_TARGETS) # output_shape[0] is num_observables
-                                                                                # If qnn_model.output_shape is (1,), then it's 1.
+        # If qnn_model.output_shape is (1,), then it's 1.
 
     def forward(self, x):
         # x = self.classical_pre(x) # If using classical_pre
@@ -143,6 +144,7 @@ def prepare_dataset_k_fold(X, y, train_indices, test_indices):
     X_test_scaled = scaler.transform(X_test)
 
     return X_train_scaled, y_train, X_test_scaled, y_test, element_test, element_train
+
 
 def get_arguments(argvs):
     _entangle = ''
@@ -205,8 +207,8 @@ if __name__ == "__main__":
         else:
             y[i] = 1
 
-    #y_scaler = MinMaxScaler(feature_range=(-1, 1))
-    #y = y_scaler.fit_transform(y.reshape(-1, 1))
+    # y_scaler = MinMaxScaler(feature_range=(-1, 1))
+    # y = y_scaler.fit_transform(y.reshape(-1, 1))
 
     print('Total number of data: ', X.shape[0])
     rkf = RepeatedKFold(n_splits=X.shape[0] // TEST_SIZE, n_repeats=N_REPEATS)
@@ -240,7 +242,6 @@ if __name__ == "__main__":
 
         print(f"Training data shape: X_train_t: {X_train_t.shape}, y_train_t: {y_train_t.shape}")
         print(f"Testing data shape: X_test_t: {X_test_t.shape}, y_test_t: {y_test_t.shape}")
-
 
         # For binary classification (0 or 1 target):
         # You might scale the QNN output (e.g., (output + 1) / 2 to get [0,1]) and then use nn.BCELoss()
@@ -287,7 +288,7 @@ if __name__ == "__main__":
                         epoch_test_loss = test_loss / len(test_loader.dataset)
                         test_losses.append(epoch_test_loss)
 
-                        print(f"Epoch {epoch+1}/{NUM_EPOCHS}, Train Loss: {epoch_loss:.4f}, Test Loss: {epoch_test_loss:.4f}")
+                        print(f"Epoch {epoch + 1}/{NUM_EPOCHS}, Train Loss: {epoch_loss:.4f}, Test Loss: {epoch_test_loss:.4f}")
 
                     print("--- Training Finished ---")
 
@@ -381,7 +382,8 @@ if __name__ == "__main__":
                                'R2 train': final_train_r2,
                                }
                     df.loc[len(df)] = new_row
-                    df.to_csv(file_name, index=False)  # update csv every loop
+                    with np.printoptions(linewidth=10000):
+                        df.to_csv(file_name, index=False)  # update csv every loop
                     df.at[0, "info"] = [f"DATASET: {dataset_name}, LEARNING_RATE = {LEARNING_RATE}, "
-                                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS},"
+                                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS}, "
                                         f"CLASSIFIER_THRESHOLD = {CLASSIFIER_THRESHOLD}"]

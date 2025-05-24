@@ -4,25 +4,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import torch
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
-
 from sklearn.model_selection import RepeatedKFold
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import MinMaxScaler, StandardScaler #StandardScaler is sensitive to outlier
 
-#from qiskit_aer import Aer
-from qiskit.circuit.library import PauliFeatureMap, RealAmplitudes, ZZFeatureMap
-from qiskit_machine_learning.algorithms import VQR
-from qiskit_machine_learning.datasets import ad_hoc_data
-from qiskit_machine_learning.algorithms import QSVR,QSVC
+from qiskit.circuit.library import ZZFeatureMap
+from qiskit_machine_learning.algorithms import QSVC
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 
 
 ### Globals
 # For reproducibility
-torch.manual_seed(42)
 np.random.seed(42)
 
 # Fixed feature sizes
@@ -227,7 +219,8 @@ if __name__ == "__main__":
                                'R2 train': r2_score(y_train, predict_train),
                                }
                     df.loc[len(df)] = new_row
-                    df.to_csv(file_name, index=False)  # update csv every loop
+                    with np.printoptions(linewidth=10000):
+                        df.to_csv(file_name, index=False)  # update csv every loop
                     df.at[0, "info"] = [f"DATASET: {dataset_name}, "
                                         f"CLASSIFIER_THRESHOLD = {CLASSIFIER_THRESHOLD}"]
                     i += 1

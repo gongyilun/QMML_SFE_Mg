@@ -1,3 +1,5 @@
+import sys, getopt
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -142,10 +144,52 @@ def prepare_dataset_k_fold(X, y, train_indices, test_indices):
 
     return X_train_scaled, y_train, X_test_scaled, y_test, element_test, element_train
 
+def get_arguments(argvs):
+    _entangle = ''
+    _feature_map_reps = ''
+    _ansatz_reps = ''
+    try:
+        opts, args = getopt.getopt(argvs, "h:e:f:a:", ["entangle=", "feature_map_reps=", "ansatz_reps="])
+    except getopt.GetoptError:
+        print('QNNC_hybrid.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps>')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('QNNC_hybrid.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps>')
+            sys.exit()
+        elif opt in ("-e", "--entangle"):
+            _entangle = arg
+        elif opt in ("-f", "--feature_map_reps"):
+            _feature_map_reps = int(arg)
+        elif opt in ("-a", "--ansatz_reps"):
+            _ansatz_reps = int(arg)
+    return _entangle, _feature_map_reps, _ansatz_reps
+
 
 if __name__ == "__main__":
-    date = '05_19_25_1'
-    file_name = f'QNNC/result/{date}.csv'
+    date = '24_19_25_1'
+    tmp1, tmp2, tmp3 = get_arguments(sys.argv[1:])
+    if tmp1 != '':
+        ENTANGLEMENT_LIST = [tmp1]
+    if tmp2 != '':
+        FEATURE_MAP_REPS_LIST = [tmp2]
+    if tmp3 != '':
+        ANSATZ_REPS_LIST = [tmp3]
+    print(f"\nFEATURE_MAP_REPS_LIST={FEATURE_MAP_REPS_LIST} "
+          f"ANSATZ_REPS_LIST={ANSATZ_REPS_LIST} ENTANGLEMENT_LIST={ENTANGLEMENT_LIST} date={date}")
+    if len(FEATURE_MAP_REPS_LIST) == 1:
+        FEATURE_MAP_REPS_LIST_NAME = FEATURE_MAP_REPS_LIST[0]
+    else:
+        FEATURE_MAP_REPS_LIST_NAME = FEATURE_MAP_REPS_LIST
+    if len(ANSATZ_REPS_LIST) == 1:
+        ANSATZ_REPS_LIST_NAME = ANSATZ_REPS_LIST[0]
+    else:
+        ANSATZ_REPS_LIST_NAME = ANSATZ_REPS_LIST
+    if len(ENTANGLEMENT_LIST) == 1:
+        ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST[0]
+    else:
+        ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST
+    file_name = f'QNNC/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_{date}.csv'
 
     print("\n--- Loading and Preprocessing Data ---")
 
@@ -339,4 +383,5 @@ if __name__ == "__main__":
                     df.loc[len(df)] = new_row
                     df.to_csv(file_name, index=False)  # update csv every loop
                     df.at[0, "info"] = [f"DATASET: {dataset_name}, LEARNING_RATE = {LEARNING_RATE}, "
-                                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS}"]
+                                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS},"
+                                        f"CLASSIFIER_THRESHOLD = {CLASSIFIER_THRESHOLD}"]

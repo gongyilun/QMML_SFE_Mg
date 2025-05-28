@@ -46,7 +46,7 @@ N_REPEATS = 10
 TEST_SIZE = 1  # Leave-one-out cross-validation (LOOCV) is suggested since the sample size is too small
 
 # Data conf
-CLASSIFIER_THRESHOLD = 17
+CLASSIFIER_THRESHOLD = 19
 
 
 def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
@@ -169,7 +169,7 @@ def get_arguments(argvs):
 
 
 if __name__ == "__main__":
-    date = '24_19_25_1'
+    date = '28_19_25_1'
     tmp1, tmp2, tmp3 = get_arguments(sys.argv[1:])
     if tmp1 != '':
         ENTANGLEMENT_LIST = [tmp1]

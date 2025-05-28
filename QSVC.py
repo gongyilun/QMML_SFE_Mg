@@ -37,7 +37,7 @@ N_REPEATS = 10
 TEST_SIZE = 1
 
 # Data conf
-CLASSIFIER_THRESHOLD = 17
+CLASSIFIER_THRESHOLD = 19
 
 
 def prepare_dataset_k_fold(X, y, train_indices, test_indices):
@@ -124,7 +124,7 @@ def get_arguments(argvs):
 
 
 if __name__ == "__main__":
-    date = '24_19_25_1'
+    date = '28_19_25_1'
     tmp1, tmp2, tmp3 = get_arguments(sys.argv[1:])
     if tmp1 != '':
         ENTANGLEMENT_LIST = [tmp1]

@@ -191,7 +191,7 @@ if __name__ == "__main__":
         ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST[0]
     else:
         ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST
-    file_name = f'QNNC/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_{date}.csv'
+    file_name = f'QNNC_hybrid/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_{date}.csv'
 
     print("\n--- Loading and Preprocessing Data ---")
 

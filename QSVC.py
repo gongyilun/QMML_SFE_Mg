@@ -1,5 +1,5 @@
 ### Import packages
-import sys, getopt
+import sys, getopt, os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ from qiskit.circuit.library import ZZFeatureMap
 from qiskit_machine_learning.algorithms import QSVC
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 
-
+root_folder = 'QSVC'
 ### Globals
 # For reproducibility
 np.random.seed(42)
@@ -108,11 +108,11 @@ def get_arguments(argvs):
     try:
         opts, args = getopt.getopt(argvs, "h:e:f:r:", ["entangle=", "feature_map_reps=", "_regu_para="])
     except getopt.GetoptError:
-        print('QSVC.py -e <entangle> -f <feature_map_reps> -r <regu_para>')
+        print(root_folder + '.py -e <entangle> -f <feature_map_reps> -r <regu_para>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('QSVC.py -e <entangle> -f <feature_map_reps> -r <regu_para>')
+            print(root_folder + '.py -e <entangle> -f <feature_map_reps> -r <regu_para>')
             sys.exit()
         elif opt in ("-e", "--entangle"):
             _entangle = arg
@@ -125,6 +125,10 @@ def get_arguments(argvs):
 
 if __name__ == "__main__":
     date = '28_19_25_1'
+    if not os.path.exists(f'{root_folder}/result'):
+        os.makedirs(f'{root_folder}/result')
+    if not os.path.exists(f'{root_folder}/logs'):
+        os.makedirs(f'{root_folder}/logs')
     tmp1, tmp2, tmp3 = get_arguments(sys.argv[1:])
     if tmp1 != '':
         ENTANGLEMENT_LIST = [tmp1]
@@ -148,7 +152,7 @@ if __name__ == "__main__":
         ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST[0]
     else:
         ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST
-    file_name = (f'QSVC/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_'
+    file_name = (f'{root_folder}/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_'
                  f'R_{REGU_PARA_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_{date}.csv')
 
     print("\n--- Loading and Preprocessing Data ---")

@@ -1,4 +1,4 @@
-import sys, getopt
+import sys, getopt, os
 
 import numpy as np
 import pandas as pd
@@ -20,6 +20,7 @@ from qiskit_machine_learning.connectors import TorchConnector
 from qiskit_machine_learning.utils.loss_functions import L2Loss  # Qiskit ML loss, or use PyTorch's
 from qiskit.quantum_info import SparsePauliOp
 
+root_folder = 'QNNR_hybrid'
 ### Globals
 # For reproducibility
 torch.manual_seed(42)
@@ -160,11 +161,11 @@ def get_arguments(argvs):
     try:
         opts, args = getopt.getopt(argvs, "h:e:f:a:", ["entangle=", "feature_map_reps=", "ansatz_reps="])
     except getopt.GetoptError:
-        print('QNNR_hybrid.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps>')
+        print(root_folder + '.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('QNNR_hybrid.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps>')
+            print(root_folder + '.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps>')
             sys.exit()
         elif opt in ("-e", "--entangle"):
             _entangle = arg
@@ -177,6 +178,10 @@ def get_arguments(argvs):
 
 if __name__ == "__main__":
     date = '24_19_25_1'
+    if not os.path.exists(f'{root_folder}/result'):
+        os.makedirs(f'{root_folder}/result')
+    if not os.path.exists(f'{root_folder}/logs'):
+        os.makedirs(f'{root_folder}/logs')
     tmp1, tmp2, tmp3 = get_arguments(sys.argv[1:])
     if tmp1 != '':
         ENTANGLEMENT_LIST = [tmp1]
@@ -198,7 +203,7 @@ if __name__ == "__main__":
         ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST[0]
     else:
         ENTANGLEMENT_LIST_NAME = ENTANGLEMENT_LIST
-    file_name = f'QNNR_hybrid/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_{date}.csv'
+    file_name = f'{root_folder}/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_{date}.csv'
 
     print("\n--- Loading and Preprocessing Data ---")
 

@@ -1,5 +1,5 @@
 ### Import packages
-import sys, getopt
+import sys, getopt, os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,6 +13,7 @@ from qiskit_machine_learning.algorithms import VQR
 from qiskit_machine_learning.optimizers import L_BFGS_B
 # from IPython.display import clear_output
 
+root_folder = 'VQR'
 ### Globals
 # For reproducibility
 np.random.seed(42)
@@ -129,11 +130,11 @@ def get_arguments(argvs):
     try:
         opts, args = getopt.getopt(argvs, "h:e:f:a:p:", ["entangle=", "feature_map_reps=", "ansatz_reps=", "if_pauli_feature="])
     except getopt.GetoptError:
-        print('VQR.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps> -p <if_pauli_feature>')
+        print(root_folder + '.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps> -p <if_pauli_feature>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('VQR.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps> -p <if_pauli_feature>')
+            print(root_folder + '.py -e <entangle> -f <feature_map_reps> -a <ansatz_reps> -p <if_pauli_feature>')
             sys.exit()
         elif opt in ("-e", "--entangle"):
             _entangle = arg
@@ -148,6 +149,10 @@ def get_arguments(argvs):
 
 if __name__ == "__main__":
     date = '05_31_25_0'
+    if not os.path.exists(f'{root_folder}/result'):
+        os.makedirs(f'{root_folder}/result')
+    if not os.path.exists(f'{root_folder}/logs'):
+        os.makedirs(f'{root_folder}/logs')
     tmp1, tmp2, tmp3, tmp4 = get_arguments(sys.argv[1:])
     if tmp1 != '':
         ENTANGLEMENT_LIST = [tmp1]
@@ -179,7 +184,7 @@ if __name__ == "__main__":
     else:
         IF_PAULI_FEATURE_MAP_LIST_NAME = IF_PAULI_FEATURE_MAP_LIST
     IF_PAULI_FEATURE_MAP_LIST_NAME = str(IF_PAULI_FEATURE_MAP_LIST_NAME).replace('False', 'ZZ').replace('True', 'Pauli')
-    file_name = f'VQR/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_P_{IF_PAULI_FEATURE_MAP_LIST_NAME}_{date}.csv'
+    file_name = f'{root_folder}/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_AR_{ANSATZ_REPS_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_P_{IF_PAULI_FEATURE_MAP_LIST_NAME}_{date}.csv'
     print('\nTo be saved to', file_name)
 
     print("\n--- Loading and Preprocessing Data ---")

@@ -1,5 +1,5 @@
 ### Import packages
-import sys, getopt
+import sys, getopt, os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ from qiskit.circuit.library import ZZFeatureMap
 from qiskit_machine_learning.algorithms import QSVR
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 
-
+root_folder = 'QSVR'
 ### Globals
 # For reproducibility
 np.random.seed(42)
@@ -112,11 +112,11 @@ def get_arguments(argvs):
     try:
         opts, args = getopt.getopt(argvs, "h:e:f:r:p:", ["entangle=", "feature_map_reps=", "_regu_para=", "_epsilon="])
     except getopt.GetoptError:
-        print('QSVR.py -e <entangle> -f <feature_map_reps> -r <regu_para> -p <epsilon>')
+        print(root_folder + '.py -e <entangle> -f <feature_map_reps> -r <regu_para> -p <epsilon>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('QSVR.py -e <entangle> -f <feature_map_reps> -r <regu_para> -p <epsilon>')
+            print(root_folder + '.py -e <entangle> -f <feature_map_reps> -r <regu_para> -p <epsilon>')
             sys.exit()
         elif opt in ("-e", "--entangle"):
             _entangle = arg
@@ -131,6 +131,10 @@ def get_arguments(argvs):
 
 if __name__ == "__main__":
     date = '24_19_25_1'
+    if not os.path.exists(f'{root_folder}/result'):
+        os.makedirs(f'{root_folder}/result')
+    if not os.path.exists(f'{root_folder}/logs'):
+        os.makedirs(f'{root_folder}/logs')
     tmp1, tmp2, tmp3, tmp4 = get_arguments(sys.argv[1:])
     if tmp1 != '':
         ENTANGLEMENT_LIST = [tmp1]
@@ -161,7 +165,7 @@ if __name__ == "__main__":
         EPISLON_LIST_NAME = EPISLON_LIST[0]
     else:
         EPISLON_LIST_NAME = EPISLON_LIST
-    file_name = (f'QSVR/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_'
+    file_name = (f'{root_folder}/result/FMR_{FEATURE_MAP_REPS_LIST_NAME}_'
                  f'R_{REGU_PARA_LIST_NAME}_E_{ENTANGLEMENT_LIST_NAME}_EP_{EPISLON_LIST_NAME}_{date}.csv')
 
     print("\n--- Loading and Preprocessing Data ---")

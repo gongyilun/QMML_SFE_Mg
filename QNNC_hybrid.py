@@ -384,10 +384,10 @@ if __name__ == "__main__":
                                'predicted train': np.array(all_preds_train).flatten(),
                                }
                     df.loc[len(df)] = new_row
-                    # with np.printoptions(linewidth=10000):
-                    #     df.to_csv(file_name, index=False)  # update csv every loop
-                    df.to_csv(file_name, index=False)
+                    with np.printoptions(linewidth=10000):    # update csv every loop
+                        df.to_csv(file_name, index=False)
     df.at[0, "info"] = [f"DATASET: {dataset_name}, LEARNING_RATE = {LEARNING_RATE}, "
-                                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS}, "
-                                        f"CLASSIFIER_THRESHOLD = {CLASSIFIER_THRESHOLD}"]
-    df.to_csv(file_name, index=False)
+                        f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS}, "
+                        f"CLASSIFIER_THRESHOLD = {CLASSIFIER_THRESHOLD}"]
+    with np.printoptions(linewidth=10000):  # final csv output
+        df.to_csv(file_name, index=False)

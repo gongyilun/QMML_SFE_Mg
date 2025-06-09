@@ -9,7 +9,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import RepeatedKFold
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
@@ -20,6 +20,9 @@ from qiskit_machine_learning.connectors import TorchConnector
 from qiskit_machine_learning.circuit.library import QNNCircuit
 from qiskit_machine_learning.utils.loss_functions import L2Loss  # Qiskit ML loss, or use PyTorch's
 from qiskit.quantum_info import SparsePauliOp
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
 
 root_folder = 'QNNC_hybrid'
 ### Globals
@@ -103,7 +106,7 @@ def get_qnn_torch_model(entangle, feature_map_reps, ansatz_reps):
     initial_weights = 0.01 * (2 * np.random.rand(qnn.num_weights) - 1)
     qnn_torch_model = TorchConnector(qnn, initial_weights=torch.tensor(initial_weights, dtype=torch.float32))
 
-    return qnn_torch_model
+    return qnn_torch_model.to(device)
 
 
 class HybridModel(nn.Module):
@@ -170,7 +173,7 @@ def get_arguments(argvs):
 
 
 if __name__ == "__main__":
-    date = '28_19_25_1'
+    date = '06_08_25_1'
     if not os.path.exists(f'{root_folder}/result'):
         os.makedirs(f'{root_folder}/result')
     if not os.path.exists(f'{root_folder}/logs'):
@@ -221,7 +224,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(columns=['entanglement', 'feature_map_reps', 'ansatz_reps',
                                'element test', 'actual test', 'predicted test',
                                'element train', 'actual train', 'predicted train',
-                               'R2 test', 'R2 train'])
+                               ])
     i = 0
 
     LOSS = nn.CrossEntropyLoss()  # use torch.long
@@ -234,10 +237,10 @@ if __name__ == "__main__":
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         X_train, y_train, X_test, y_test, element_test, element_train = prepare_dataset_k_fold(X, y, train_indices, test_indices)
 
-        X_train_t = torch.tensor(X_train, dtype=torch.float32)
-        y_train_t = torch.tensor(y_train, dtype=torch.long)
-        X_test_t = torch.tensor(X_test, dtype=torch.float32)
-        y_test_t = torch.tensor(y_test, dtype=torch.long)
+        X_train_t = torch.tensor(X_train, dtype=torch.float32).to(device)
+        y_train_t = torch.tensor(y_train, dtype=torch.long).to(device)
+        X_test_t = torch.tensor(X_test, dtype=torch.float32).to(device)
+        y_test_t = torch.tensor(y_test, dtype=torch.long).to(device)
 
         # Create DataLoaders
         train_dataset = TensorDataset(X_train_t, y_train_t)
@@ -259,7 +262,7 @@ if __name__ == "__main__":
                     # model = qnn_torch_model # for purely quantum nn
                     model = HybridModel(get_qnn_torch_model(entangle=entanglement,
                                                             feature_map_reps=feature_map_reps,
-                                                            ansatz_reps=ansatz_reps))  # Classical modifications in the HybridQNN class
+                                                            ansatz_reps=ansatz_reps)).to(device)  # Classical modifications in the HybridQNN class
                     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
                     print(f"\n--- Starting Training {i}th---")
@@ -271,6 +274,7 @@ if __name__ == "__main__":
                         model.train()
                         running_loss = 0.0
                         for batch_X, batch_y in train_loader:
+                            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
                             optimizer.zero_grad()  # Clear gradients
                             outputs = model(batch_X)  # Forward pass
                             loss = LOSS(outputs, batch_y)  # Calculate loss
@@ -286,6 +290,7 @@ if __name__ == "__main__":
                         test_loss = 0.0
                         with torch.no_grad():  # Disable gradient calculations
                             for batch_X_test, batch_y_test in test_loader:
+                                batch_X_test, batch_y_test = batch_X_test.to(device), batch_y_test.to(device)
                                 outputs_test = model(batch_X_test)
                                 loss_test = LOSS(outputs_test, batch_y_test)
                                 test_loss += loss_test.item() * batch_X_test.size(0)
@@ -316,10 +321,12 @@ if __name__ == "__main__":
                     all_targets_train = []
                     with torch.no_grad():
                         for batch_X_test, batch_y_test in test_loader:
+                            batch_X_test = batch_X_test.to(device)
                             outputs_test = model(batch_X_test)
                             all_preds.extend(outputs_test.cpu().numpy())
                             all_targets.extend(batch_y_test.cpu().numpy())
                         for batch_X_train, batch_y_train in train_loader:
+                            batch_X_train = batch_X_train.to(device)
                             outputs_train = model(batch_X_train)
                             all_preds_train.extend(outputs_train.cpu().numpy())
                             all_targets_train.extend(batch_y_train.cpu().numpy())
@@ -359,17 +366,9 @@ if __name__ == "__main__":
                     # plt.show()
 
                     # Further evaluation metrics can be added here (e.g., R-squared for regression, accuracy for classification)
-                    final_mse = mean_squared_error(all_targets, all_preds)
-                    final_r2 = r2_score(all_targets, all_preds)
-                    print(f"\n--- Final Test Set Evaluation ---")
-                    print(f"Mean Squared Error (MSE): {final_mse:.4f}")
-                    print(f"R-squared (R2 Score): {final_r2:.4f}")
-
-                    final_train_mse = mean_squared_error(all_targets_train, all_preds_train)
-                    final_train_r2 = r2_score(all_targets_train, all_preds_train)
-                    print(f"\n--- Final Train Set Evaluation ---")
-                    print(f"Mean Squared Error (MSE): {final_train_mse:.4f}")
-                    print(f"R-squared (R2 Score): {final_train_r2:.4f}")
+                    
+                    print(torch.cuda.memory_allocated())
+                    print(torch.cuda.max_memory_allocated())
 
                     print(f"\n--- Done for entanglement: {entanglement}, feature_map_reps: {feature_map_reps}, ansatz_reps: {ansatz_reps} ---")
 
@@ -383,12 +382,12 @@ if __name__ == "__main__":
                                'element train': element_train,
                                'actual train': np.array(all_targets_train).flatten(),
                                'predicted train': np.array(all_preds_train).flatten(),
-                               'R2 test': final_r2,
-                               'R2 train': final_train_r2,
                                }
                     df.loc[len(df)] = new_row
-                    with np.printoptions(linewidth=10000):
-                        df.to_csv(file_name, index=False)  # update csv every loop
-                    df.at[0, "info"] = [f"DATASET: {dataset_name}, LEARNING_RATE = {LEARNING_RATE}, "
+                    # with np.printoptions(linewidth=10000):
+                    #     df.to_csv(file_name, index=False)  # update csv every loop
+                    df.to_csv(file_name, index=False)
+    df.at[0, "info"] = [f"DATASET: {dataset_name}, LEARNING_RATE = {LEARNING_RATE}, "
                                         f"BATCH_SIZE = {BATCH_SIZE}, NUM_EPOCHS = {NUM_EPOCHS}, LOSS: {LOSS}, "
                                         f"CLASSIFIER_THRESHOLD = {CLASSIFIER_THRESHOLD}"]
+    df.to_csv(file_name, index=False)

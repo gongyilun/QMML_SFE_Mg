@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+type: software
+message: >-
+  If you use or adapt this code in published research, please cite the article
+  in preferred-citation. For research datasets, please also record the
+  repository, source file, and source revision in provenance metadata.
+title: "QMML_SFE_Mg: Quantum Machine Learning for Stacking Fault Energy in Mg Alloys"
+authors:
+  - family-names: Gong
+    given-names: Yilun
+    orcid: "https://orcid.org/0000-0002-8088-2562"
+  - family-names: Wang
+    given-names: Leyang
+repository-code: "https://github.com/gongyilun/QMML_SFE_Mg"
+url: "https://github.com/gongyilun/QMML_SFE_Mg"
+license: MIT
+preferred-citation:
+  type: article
+  title: "Quantum and Hybrid Machine-Learning Models for Materials-Science Tasks"
+  authors:
+    - family-names: Wang
+      given-names: Leyang
+    - family-names: Gong
+      given-names: Yilun
+      orcid: "https://orcid.org/0000-0002-8088-2562"
+    - family-names: Pei
+      given-names: Zongrui
+      orcid: "https://orcid.org/0000-0003-0748-4629"
+  journal: "Advanced Quantum Technologies"
+  volume: "9"
+  issue: "2"
+  year: 2026
+  month: 2
+  date-published: "2026-02-14"
+  # The publisher uses an article locator instead of a page range.
+  start: "e00501"
+  doi: "10.1002/qute.202500501"
+  url: "https://doi.org/10.1002/qute.202500501"
